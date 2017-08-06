@@ -1,6 +1,6 @@
 {
   "name": "stash-it-plugin-debug",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Debug plugin for stash-it.",
   "author": "Jacek Smolak <jacek.smolak@gmail.com>",
   "main": "build/index.js",
