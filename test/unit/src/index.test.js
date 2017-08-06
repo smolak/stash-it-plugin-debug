@@ -1,8 +1,9 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import R from 'ramda';
+import { createDummyAdapter } from 'stash-it-test-helpers';
+import { createCache } from 'stash-it';
 
-import { createDummyCacheInstance } from 'stash-it-test-helpers';
 import createDegubPlugin from '../../../src/index';
 
 function upperFirst(string) {
@@ -13,9 +14,6 @@ function upperFirst(string) {
 }
 
 describe('Debug plugin', () => {
-    const cacheInstance = createDummyCacheInstance();
-    const cacheInstanceWithPluggableMethodsOnly = R.omit([ 'addHook', 'addHooks', 'getHooks' ], cacheInstance);
-    const pluggableMethods = Object.keys(cacheInstanceWithPluggableMethodsOnly);
     const callback = sinon.spy();
 
     beforeEach(() => {
@@ -30,6 +28,9 @@ describe('Debug plugin', () => {
         });
 
         it('should contain hooks (pre and post) for all pluggable methods base cache instance has', () => {
+            const cacheInstance = createCache(createDummyAdapter());
+            const cacheInstanceWithPluggableMethodsOnly = R.omit([ 'addHook', 'addHooks', 'getHooks' ], cacheInstance);
+            const pluggableMethods = Object.keys(cacheInstanceWithPluggableMethodsOnly);
             const plugin = createDegubPlugin(callback);
             const hookEvents = plugin.hooks.map((hook) => hook.event);
 
