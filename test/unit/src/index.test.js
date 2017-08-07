@@ -45,7 +45,7 @@ describe('Debug plugin', () => {
 
         it('should execute callback for all pluggable methods base cache instance has', () => {
             const plugin = createDegubPlugin(callback);
-            const args = { foo: 'bar', baz: 'bam' };
+            const args = { foo: 'bar', baz: 'bam', cacheInstance: 'cacheObject' };
 
             plugin.hooks.forEach((hook) => {
                 callback.reset();
@@ -53,8 +53,31 @@ describe('Debug plugin', () => {
                 hook.handler(args);
 
                 expect(callback)
-                    .to.have.been.calledWith(args)
+                    .to.have.been.calledWith({
+                        event: hook.event,
+                        args: R.omit([ 'cacheInstance' ], args)
+                    })
                     .to.have.been.calledOnce;
+            });
+        });
+
+        context('when `withCacheInstance` is set to `true`', () => {
+            it('should execute callback with cacheInstance for all pluggable methods cache instance has', () => {
+                const plugin = createDegubPlugin(callback, true);
+                const args = { foo: 'bar', baz: 'bam', cacheInstance: 'cacheObject' };
+
+                plugin.hooks.forEach((hook) => {
+                    callback.reset();
+
+                    hook.handler(args);
+
+                    expect(callback)
+                        .to.have.been.calledWith({
+                            event: hook.event,
+                            args
+                        })
+                        .to.have.been.calledOnce;
+                });
             });
         });
 

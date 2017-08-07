@@ -1,4 +1,4 @@
-import { equals, flatten } from 'ramda';
+import { equals, flatten, omit } from 'ramda';
 
 function upperFirst(string) {
     const firstLetter = string[0];
@@ -7,7 +7,7 @@ function upperFirst(string) {
     return `${firstLetter.toUpperCase()}${restOfTheString}`;
 }
 
-export default function debug(callback) {
+export default function debug(callback, withCacheInstance = false) {
     const pluggableMethods = [ 'buildKey', 'getItem', 'getExtra', 'setItem', 'hasItem', 'removeItem' ];
     const prePostPairs = pluggableMethods.map((methodName) => {
         return [
@@ -20,7 +20,12 @@ export default function debug(callback) {
         return {
             event: methodName,
             handler: (args) => {
-                callback(args);
+                const argsToCall = withCacheInstance ? args : omit([ 'cacheInstance' ], args);
+
+                callback({
+                    event: methodName,
+                    args: argsToCall
+                });
 
                 return args;
             }
