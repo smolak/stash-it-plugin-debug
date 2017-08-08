@@ -4,7 +4,7 @@ import R from 'ramda';
 import { createDummyAdapter, nonFunctionValues } from 'stash-it-test-helpers';
 import { createCache, createItem } from 'stash-it';
 
-import createDegubPlugin from '../../../src/index';
+import createDebugPlugin from '../../../src/index';
 
 function upperFirst(string) {
     const firstLetter = string[0];
@@ -23,7 +23,7 @@ describe('Debug plugin', () => {
     context('when callback is not a function', () => {
         it('should throw', () => {
             nonFunctionValues.forEach((value) => {
-                expect(createDegubPlugin.bind(null, value))
+                expect(createDebugPlugin.bind(null, value))
                     .to.throw('Callback must be a function.');
             });
         });
@@ -31,7 +31,7 @@ describe('Debug plugin', () => {
 
     describe('hooks', () => {
         it('should be an array', () => {
-            const plugin = createDegubPlugin(callback);
+            const plugin = createDebugPlugin(callback);
 
             expect(plugin.hooks).to.be.an('array');
         });
@@ -40,7 +40,7 @@ describe('Debug plugin', () => {
             const cacheInstance = createCache(createDummyAdapter(createItem));
             const cacheInstanceWithPluggableMethodsOnly = R.omit([ 'addHook', 'addHooks', 'getHooks' ], cacheInstance);
             const pluggableMethods = Object.keys(cacheInstanceWithPluggableMethodsOnly);
-            const plugin = createDegubPlugin(callback);
+            const plugin = createDebugPlugin(callback);
             const hookEvents = plugin.hooks.map((hook) => hook.event);
 
             pluggableMethods.forEach((methodName) => {
@@ -53,7 +53,7 @@ describe('Debug plugin', () => {
         });
 
         it('should execute callback for all pluggable methods base cache instance has', () => {
-            const plugin = createDegubPlugin(callback);
+            const plugin = createDebugPlugin(callback);
             const args = { foo: 'bar', baz: 'bam', cacheInstance: 'cacheObject' };
 
             plugin.hooks.forEach((hook) => {
@@ -72,7 +72,7 @@ describe('Debug plugin', () => {
 
         context('when `withCacheInstance` is set to `true`', () => {
             it('should execute callback with cacheInstance for all pluggable methods cache instance has', () => {
-                const plugin = createDegubPlugin(callback, true);
+                const plugin = createDebugPlugin(callback, true);
                 const args = { foo: 'bar', baz: 'bam', cacheInstance: 'cacheObject' };
 
                 plugin.hooks.forEach((hook) => {
@@ -91,7 +91,7 @@ describe('Debug plugin', () => {
         });
 
         it('should return the same arguments passed to handler (handler acts as a proxy)', () => {
-            const plugin = createDegubPlugin(callback);
+            const plugin = createDebugPlugin(callback);
             const args = { foo: 'bar', baz: 'bam' };
 
             plugin.hooks.forEach((hook) => {
@@ -106,13 +106,13 @@ describe('Debug plugin', () => {
 
     describe('getExtensions', () => {
         it('should be a function', () => {
-            const plugin = createDegubPlugin(callback);
+            const plugin = createDebugPlugin(callback);
 
             expect(plugin.getExtensions).to.be.a('function');
         });
 
         it('should return an object with runDiagnostics function', () => {
-            const plugin = createDegubPlugin(callback);
+            const plugin = createDebugPlugin(callback);
             const extensions = plugin.getExtensions();
 
             expect(extensions).to.have.property('runDiagnostics')
@@ -151,7 +151,7 @@ describe('Debug plugin', () => {
                 dummyCacheInstance.setItem.reset();
                 dummyCacheInstance.setItem.withArgs('key', 'value', {}).returns(item);
 
-                plugin = createDegubPlugin(callback);
+                plugin = createDebugPlugin(callback);
             });
 
             it('should check if item for given key exists', () => {
