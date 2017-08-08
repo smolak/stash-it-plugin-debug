@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import R from 'ramda';
 import { createDummyAdapter } from 'stash-it-test-helpers';
-import { createCache } from 'stash-it';
+import { createCache, createItem } from 'stash-it';
 
 import createDegubPlugin from '../../../src/index';
 
@@ -28,7 +28,7 @@ describe('Debug plugin', () => {
         });
 
         it('should contain hooks (pre and post) for all pluggable methods base cache instance has', () => {
-            const cacheInstance = createCache(createDummyAdapter());
+            const cacheInstance = createCache(createDummyAdapter(createItem));
             const cacheInstanceWithPluggableMethodsOnly = R.omit([ 'addHook', 'addHooks', 'getHooks' ], cacheInstance);
             const pluggableMethods = Object.keys(cacheInstanceWithPluggableMethodsOnly);
             const plugin = createDegubPlugin(callback);
