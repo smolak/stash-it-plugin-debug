@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import R from 'ramda';
-import { createDummyAdapter } from 'stash-it-test-helpers';
+import { createDummyAdapter, nonFunctionValues } from 'stash-it-test-helpers';
 import { createCache, createItem } from 'stash-it';
 
 import createDegubPlugin from '../../../src/index';
@@ -18,6 +18,15 @@ describe('Debug plugin', () => {
 
     beforeEach(() => {
         callback.reset();
+    });
+
+    context('when callback is not a function', () => {
+        it('should throw', () => {
+            nonFunctionValues.forEach((value) => {
+                expect(createDegubPlugin.bind(null, value))
+                    .to.throw('Callback must be a function.');
+            });
+        });
     });
 
     describe('hooks', () => {

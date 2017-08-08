@@ -8,6 +8,10 @@ function upperFirst(string) {
 }
 
 export default function debug(callback, withCacheInstance = false) {
+    if (typeof callback !== 'function') {
+        throw new Error('Callback must be a function.');
+    }
+
     const pluggableMethods = [ 'buildKey', 'getItem', 'getExtra', 'setItem', 'hasItem', 'removeItem' ];
     const prePostPairs = pluggableMethods.map((methodName) => {
         return [
