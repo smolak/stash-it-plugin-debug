@@ -81,9 +81,17 @@ You will also find information there what arguments are used with each event.
 This method will run full diagnostics.
 
 Those diagnostics will try to create, search for, obtain and remove the item. If it fails on the way, you will be informed.
-Every check is done using callback function passed upon creation of this plugin.
 This is done to check if cache is capable of doing all of those actions against storage used by adapter.
 
+Every check, once done, is being informed about using callback function, the very same one passed upon creation of this plugin.
+
+For example:
+```javascript
+callback('(1/6) Item set successfully.');
+```
+
+
+#### Is it safe? Won't I overwrite or remove existing item?
 If there is an item for key that you use, it will throw. It is a safety mechanism so that you won't overwrite / remove existing item in storage.
 
 `extra` is optional. If passed, item will be created using it. It fallbacks to empty object.
