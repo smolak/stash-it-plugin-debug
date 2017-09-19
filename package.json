@@ -21,8 +21,8 @@
   },
   "keywords": [
     "cache",
-    "adapter",
-    "memory",
+    "plugin",
+    "debug",
     "stash-it"
   ],
   "license": "MIT",
