@@ -17,7 +17,7 @@ export default function debug(callback, withCacheInstance = false) {
         return [
             `pre${upperFirst(methodName)}`,
             `post${upperFirst(methodName)}`
-        ]
+        ];
     });
     const flattenList = flatten(prePostPairs);
     const hooks = flattenList.map((methodName) => {
@@ -33,7 +33,7 @@ export default function debug(callback, withCacheInstance = false) {
 
                 return args;
             }
-        }
+        };
     });
 
     return {
@@ -48,6 +48,7 @@ export default function debug(callback, withCacheInstance = false) {
 
                     const setItem = cacheInstance.setItem(key, value, extra);
 
+                    // eslint-disable-next-line callback-return
                     callback('(1/6) Item set successfully.');
 
                     const result2 = cacheInstance.hasItem(key);
@@ -58,6 +59,7 @@ export default function debug(callback, withCacheInstance = false) {
                         return;
                     }
 
+                    // eslint-disable-next-line callback-return
                     callback('(2/6) Item is present in cache.');
 
                     const gotItem = cacheInstance.getItem(key);
@@ -68,6 +70,7 @@ export default function debug(callback, withCacheInstance = false) {
                         return;
                     }
 
+                    // eslint-disable-next-line callback-return
                     callback('(3/6) Item got from cache successfully.');
 
                     if (!equals(setItem, gotItem)) {
@@ -81,6 +84,7 @@ export default function debug(callback, withCacheInstance = false) {
                         return;
                     }
 
+                    // eslint-disable-next-line callback-return
                     callback('(4/6) Items are equal.');
 
                     const result = cacheInstance.removeItem(key);
@@ -91,6 +95,7 @@ export default function debug(callback, withCacheInstance = false) {
                         return;
                     }
 
+                    // eslint-disable-next-line callback-return
                     callback('(5/6) Item removed successfully.');
 
                     const result3 = cacheInstance.hasItem(key);
