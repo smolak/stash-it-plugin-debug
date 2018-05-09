@@ -17,7 +17,7 @@ describe('Debug plugin', () => {
     const callback = sinon.spy();
 
     beforeEach(() => {
-        callback.reset();
+        callback.resetHistory();
     });
 
     context('when callback is not a function', () => {
@@ -57,7 +57,7 @@ describe('Debug plugin', () => {
             const args = { foo: 'bar', baz: 'bam', cacheInstance: 'cacheObject' };
 
             plugin.hooks.forEach((hook) => {
-                callback.reset();
+                callback.resetHistory();
 
                 hook.handler(args);
 
@@ -76,7 +76,7 @@ describe('Debug plugin', () => {
                 const args = { foo: 'bar', baz: 'bam', cacheInstance: 'cacheObject' };
 
                 plugin.hooks.forEach((hook) => {
-                    callback.reset();
+                    callback.resetHistory();
 
                     hook.handler(args);
 
@@ -95,7 +95,7 @@ describe('Debug plugin', () => {
             const args = { foo: 'bar', baz: 'bam' };
 
             plugin.hooks.forEach((hook) => {
-                callback.reset();
+                callback.resetHistory();
 
                 const result = hook.handler(args);
 
@@ -244,8 +244,8 @@ describe('Debug plugin', () => {
                     extensions.runDiagnostics('key', 'value');
 
                     expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
-                    expect(dummyCacheInstance.getItem).to.not.have.beenCalled;
-                    expect(dummyCacheInstance.removeItem).to.not.have.beenCalled;
+                    expect(dummyCacheInstance.getItem).to.not.have.been.called;
+                    expect(dummyCacheInstance.removeItem).to.not.have.been.called;
                 });
 
                 it('should call callback twice', () => {
@@ -322,7 +322,7 @@ describe('Debug plugin', () => {
                     extensions.runDiagnostics('key', 'value');
 
                     expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
-                    expect(dummyCacheInstance.removeItem).to.not.have.beenCalled;
+                    expect(dummyCacheInstance.removeItem).to.not.have.been.called;
                 });
 
                 it('should call callback 4 times', () => {
