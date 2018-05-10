@@ -178,7 +178,7 @@ describe('Debug plugin', () => {
                 plugin = createDebugPlugin(callback);
             });
 
-            describe('preCheck', () => {
+            describe('preliminary check', () => {
                 it('should check if item for given key exists', () => {
                     const extensions = plugin.createExtensions(dummyCacheInstance);
                     extensions.runDiagnostics('key');

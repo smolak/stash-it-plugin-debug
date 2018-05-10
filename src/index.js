@@ -7,7 +7,7 @@ function upperFirst(string) {
     return `${firstLetter.toUpperCase()}${restOfTheString}`;
 }
 
-function runPreCheck({ cacheInstance, key }) {
+function runPreliminaryCheck({ cacheInstance, key }) {
     if (cacheInstance.hasItem(key)) {
         throw new Error('You can\'t run diagnostics on existing item. Use different key.');
     }
@@ -109,7 +109,7 @@ export default function debug(callback, withCacheInstance = false) {
                 runDiagnostics: (key, value, extra = {}) => {
                     const payload = { cacheInstance, callback, key, value, extra };
 
-                    runPreCheck(payload);
+                    runPreliminaryCheck(payload);
 
                     const setItemCheck = runSetItemCheck(payload);
 
