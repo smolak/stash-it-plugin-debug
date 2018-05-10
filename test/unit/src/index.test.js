@@ -320,182 +320,190 @@ describe('Debug plugin', () => {
                 });
             });
 
-            it('should get the item', () => {
-                const extensions = plugin.createExtensions(dummyCacheInstance);
+            describe('getItem check', () => {
+                it('should get the item', () => {
+                    const extensions = plugin.createExtensions(dummyCacheInstance);
 
-                extensions.runDiagnostics('key', 'value');
+                    extensions.runDiagnostics('key', 'value');
 
-                expect(dummyCacheInstance.getItem)
-                    .to.have.been.calledWith('key')
-                    .to.have.been.calledAfter(dummyCacheInstance.setItem)
-                    .to.have.been.calledOnce;
-            });
+                    expect(dummyCacheInstance.getItem)
+                        .to.have.been.calledWith('key')
+                        .to.have.been.calledAfter(dummyCacheInstance.setItem)
+                        .to.have.been.calledOnce;
+                });
 
-            context('when item can\'t be retrieved from cache', () => {
-                it('should call callback with error message', () => {
-                    dummyCacheInstance.getItem.returns(undefined);
+                context('when item can\'t be retrieved from cache', () => {
+                    it('should call callback with error message', () => {
+                        dummyCacheInstance.getItem.returns(undefined);
 
+                        const extensions = plugin.createExtensions(dummyCacheInstance);
+
+                        extensions.runDiagnostics('key', 'value');
+
+                        expect(callback.getCall(2))
+                            .to.have.been.calledWith('Error: Item could not be get from cache.');
+                    });
+                });
+
+                it('should call callback with info that item was retrieved from cache', () => {
                     const extensions = plugin.createExtensions(dummyCacheInstance);
 
                     extensions.runDiagnostics('key', 'value');
 
                     expect(callback.getCall(2))
-                        .to.have.been.calledWith('Error: Item could not be get from cache.');
+                        .to.have.been.calledWith('(3/6) Item got from cache successfully.');
                 });
             });
 
-            it('should call callback with info that item was retrieved from cache', () => {
-                const extensions = plugin.createExtensions(dummyCacheInstance);
+            describe('item comparison check', () => {
+                context('when item returned by setItem does not equal one returned by getItem', () => {
+                    const setItem = { key: 'key', value: 'value', extra: 'extra' };
+                    const gotItem = {
+                        ...setItem,
+                        key: 'foo'
+                    };
 
-                extensions.runDiagnostics('key', 'value');
+                    beforeEach(() => {
+                        dummyCacheInstance.setItem.returns(setItem);
+                        dummyCacheInstance.getItem.returns(gotItem);
+                    });
 
-                expect(callback.getCall(2))
-                    .to.have.been.calledWith('(3/6) Item got from cache successfully.');
-            });
+                    it('should call callback with error message', () => {
+                        const message = 'Error: Retrieved item is different than one created while setting it. If ' +
+                            'there are any hooks added, they can alter any data being set / got from cache. If you ' +
+                            'know that there are no hooks that might mutate the data in the process, it means that ' +
+                            'something is wrong while retrieving data from storage.';
 
-            context('when item returned by setItem does not equal one returned by getItem', () => {
-                const setItem = { key: 'key', value: 'value', extra: 'extra' };
-                const gotItem = {
-                    ...setItem,
-                    key: 'foo'
-                };
+                        const extensions = plugin.createExtensions(dummyCacheInstance);
 
-                beforeEach(() => {
-                    dummyCacheInstance.setItem.returns(setItem);
-                    dummyCacheInstance.getItem.returns(gotItem);
+                        extensions.runDiagnostics('key', 'value');
+
+                        expect(callback.getCall(3))
+                            .to.have.been.calledWith(message);
+                    });
+
+                    it('should not perform any other checks', () => {
+                        const extensions = plugin.createExtensions(dummyCacheInstance);
+
+                        extensions.runDiagnostics('key', 'value');
+
+                        expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
+                        expect(dummyCacheInstance.removeItem).to.not.have.been.called;
+                    });
+
+                    it('should call callback 4 times', () => {
+                        const extensions = plugin.createExtensions(dummyCacheInstance);
+
+                        extensions.runDiagnostics('key', 'value');
+
+                        expect(callback.callCount).to.eq(4)
+                    });
                 });
 
-                it('should call callback with error message', () => {
-                    const message = 'Error: Retrieved item is different than one created while setting it. If ' +
-                        'there are any hooks added, they can alter any data being set / got from cache. If you ' +
-                        'know that there are no hooks that might mutate the data in the process, it means that ' +
-                        'something is wrong while retrieving data from storage.';
-
+                it('should call callback with info that items are equal', () => {
                     const extensions = plugin.createExtensions(dummyCacheInstance);
 
                     extensions.runDiagnostics('key', 'value');
 
                     expect(callback.getCall(3))
-                        .to.have.been.calledWith(message);
+                        .to.have.been.calledWith('(4/6) Items are equal.');
                 });
+            });
 
-                it('should not perform any other checks', () => {
+            describe('removeItem check', () => {
+                it('should remove the item', () => {
                     const extensions = plugin.createExtensions(dummyCacheInstance);
 
                     extensions.runDiagnostics('key', 'value');
 
-                    expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
-                    expect(dummyCacheInstance.removeItem).to.not.have.been.called;
+                    expect(dummyCacheInstance.removeItem)
+                        .to.have.been.calledWith('key')
+                        .to.have.been.calledAfter(dummyCacheInstance.getItem)
+                        .to.have.been.calledOnce;
                 });
 
-                it('should call callback 4 times', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
+                context('when item could not be removed', () => {
+                    beforeEach(() => {
+                        dummyCacheInstance.removeItem.returns(false);
+                    });
 
-                    extensions.runDiagnostics('key', 'value');
+                    it('should call callback with error message', () => {
+                        const extensions = plugin.createExtensions(dummyCacheInstance);
 
-                    expect(callback.callCount).to.eq(4)
-                });
-            });
+                        extensions.runDiagnostics('key', 'value');
 
-            it('should call callback with info that items are equal', () => {
-                const extensions = plugin.createExtensions(dummyCacheInstance);
+                        expect(callback.getCall(4))
+                            .to.have.been.calledWith('Error: Item could not be removed.');
+                    });
 
-                extensions.runDiagnostics('key', 'value');
+                    it('should not perform any other checks', () => {
+                        const extensions = plugin.createExtensions(dummyCacheInstance);
 
-                expect(callback.getCall(3))
-                    .to.have.been.calledWith('(4/6) Items are equal.');
-            });
+                        extensions.runDiagnostics('key', 'value');
 
-            it('should remove the item', () => {
-                const extensions = plugin.createExtensions(dummyCacheInstance);
+                        expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
+                    });
 
-                extensions.runDiagnostics('key', 'value');
+                    it('should call callback 5 times', () => {
+                        const extensions = plugin.createExtensions(dummyCacheInstance);
 
-                expect(dummyCacheInstance.removeItem)
-                    .to.have.been.calledWith('key')
-                    .to.have.been.calledAfter(dummyCacheInstance.getItem)
-                    .to.have.been.calledOnce;
-            });
+                        extensions.runDiagnostics('key', 'value');
 
-            context('when item could not be removed', () => {
-                beforeEach(() => {
-                    dummyCacheInstance.removeItem.returns(false);
+                        expect(callback.callCount).to.eq(5)
+                    });
                 });
 
-                it('should call callback with error message', () => {
+                it('should call callback with info that item was removed', () => {
                     const extensions = plugin.createExtensions(dummyCacheInstance);
 
                     extensions.runDiagnostics('key', 'value');
 
                     expect(callback.getCall(4))
-                        .to.have.been.calledWith('Error: Item could not be removed.');
+                        .to.have.been.calledWith('(5/6) Item removed successfully.');
                 });
+            });
 
-                it('should not perform any other checks', () => {
+            describe('hasItem check after item was removed', () => {
+                it('should check if item exists', () => {
                     const extensions = plugin.createExtensions(dummyCacheInstance);
 
                     extensions.runDiagnostics('key', 'value');
 
-                    expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
+                    expect(dummyCacheInstance.hasItem.getCall(2))
+                        .to.have.been.calledWith('key');
                 });
 
-                it('should call callback 5 times', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
+                context('when item was found', () => {
+                    beforeEach(() => {
+                        dummyCacheInstance.hasItem.onCall(2).returns(true);
+                    });
 
-                    extensions.runDiagnostics('key', 'value');
+                    it('should call callback with error message', () => {
+                        const extensions = plugin.createExtensions(dummyCacheInstance);
 
-                    expect(callback.callCount).to.eq(5)
-                });
-            });
+                        extensions.runDiagnostics('key', 'value');
 
-            it('should call callback with info that item was removed', () => {
-                const extensions = plugin.createExtensions(dummyCacheInstance);
+                        expect(callback.getCall(5))
+                            .to.have.been.calledWith('Error: Item still exists.');
+                    });
 
-                extensions.runDiagnostics('key', 'value');
+                    it('should call callback 6 times', () => {
+                        const extensions = plugin.createExtensions(dummyCacheInstance);
 
-                expect(callback.getCall(4))
-                    .to.have.been.calledWith('(5/6) Item removed successfully.');
-            });
+                        extensions.runDiagnostics('key', 'value');
 
-            it('should check if item exists', () => {
-                const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                extensions.runDiagnostics('key', 'value');
-
-                expect(dummyCacheInstance.hasItem.getCall(2))
-                    .to.have.been.calledWith('key');
-            });
-
-            context('when item was found', () => {
-                beforeEach(() => {
-                    dummyCacheInstance.hasItem.onCall(2).returns(true);
+                        expect(callback.callCount).to.eq(6)
+                    });
                 });
 
-                it('should call callback with error message', () => {
+                it('should call callback with info that item was successfully removed', () => {
                     const extensions = plugin.createExtensions(dummyCacheInstance);
 
                     extensions.runDiagnostics('key', 'value');
 
                     expect(callback.getCall(5))
-                        .to.have.been.calledWith('Error: Item still exists.');
+                        .to.have.been.calledWith('(6/6) Item is not present in cache.');
                 });
-
-                it('should call callback 6 times', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value');
-
-                    expect(callback.callCount).to.eq(6)
-                });
-            });
-
-            it('should call callback with info that item was successfully removed', () => {
-                const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                extensions.runDiagnostics('key', 'value');
-
-                expect(callback.getCall(5))
-                    .to.have.been.calledWith('(6/6) Item is not present in cache.');
             });
         });
     });
