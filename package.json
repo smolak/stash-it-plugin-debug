@@ -40,11 +40,11 @@
     "nyc": "^11.7.1",
     "sinon": "^5.0.7",
     "sinon-chai": "^3.0.0",
-    "stash-it": "^1.2.2",
+    "stash-it": "^3.0.0-rc.2",
     "stash-it-test-helpers": "^1.5.1"
   },
   "peerDependencies": {
-    "stash-it": "^1.2.2"
+    "stash-it": "^3.0.0-rc.2"
   },
   "dependencies": {
     "ramda": "^0.25.0"
