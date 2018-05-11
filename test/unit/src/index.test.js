@@ -153,6 +153,12 @@ describe('Debug plugin', () => {
             };
             let plugin;
 
+            function runDiagnostics(cacheInstance) {
+                const extensions = plugin.createExtensions(cacheInstance);
+
+                extensions.runDiagnostics('key', 'value', extra);
+            }
+
             beforeEach(() => {
                 dummyCacheInstance.getExtra.resetHistory();
                 dummyCacheInstance.getExtra.withArgs('key').returns(extra);
@@ -180,8 +186,7 @@ describe('Debug plugin', () => {
 
             describe('preliminary check', () => {
                 it('should check if item for given key exists', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-                    extensions.runDiagnostics('key');
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(dummyCacheInstance.hasItem.firstCall)
                         .to.have.been.calledWith('key');
@@ -201,9 +206,7 @@ describe('Debug plugin', () => {
 
             describe('setItem check', () => {
                 it('should set an item', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value', extra);
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(dummyCacheInstance.setItem)
                         .to.have.been.calledWith('key', 'value', extra)
@@ -211,9 +214,7 @@ describe('Debug plugin', () => {
                 });
 
                 it('should call callback with set item successful message', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value', extra);
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(callback)
                         .to.have.been.calledWith('(1/7) Item set successfully.')
@@ -226,18 +227,14 @@ describe('Debug plugin', () => {
                     });
 
                     it('should call callback with error message', () => {
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(callback.getCall(0))
                             .to.have.been.calledWith('Error: Could not set item in the cache.');
                     });
 
                     it('should not perform any other checks', () => {
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(dummyCacheInstance.hasItem).to.have.been.calledOnce;
                         expect(dummyCacheInstance.getItem).to.not.have.been.called;
@@ -246,9 +243,7 @@ describe('Debug plugin', () => {
                     });
 
                     it('should call callback once', () => {
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(callback).to.have.been.calledOnce;
                     });
@@ -257,18 +252,14 @@ describe('Debug plugin', () => {
 
             describe('hasItem check', () => {
                 it('should check if item exists', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value', extra);
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(dummyCacheInstance.hasItem.getCall(1))
                         .to.have.been.calledWith('key');
                 });
 
                 it('should call callback with info that item is present in cache', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value', extra);
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(callback.getCall(1))
                         .to.have.been.calledWith('(2/7) Item is present in cache.');
@@ -280,18 +271,14 @@ describe('Debug plugin', () => {
                     });
 
                     it('should call callback with error message', () => {
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(callback.getCall(1))
                             .to.have.been.calledWith('Error: Could not find the item in cache.');
                     });
 
                     it('should not perform any other checks', () => {
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
                         expect(dummyCacheInstance.getItem).to.not.have.been.called;
@@ -299,9 +286,7 @@ describe('Debug plugin', () => {
                     });
 
                     it('should call callback twice', () => {
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(callback).to.have.been.calledTwice;
                     });
@@ -310,9 +295,7 @@ describe('Debug plugin', () => {
 
             describe('getItem check', () => {
                 it('should get the item', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value', extra);
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(dummyCacheInstance.getItem)
                         .to.have.been.calledWith('key')
@@ -324,9 +307,7 @@ describe('Debug plugin', () => {
                     it('should call callback with error message', () => {
                         dummyCacheInstance.getItem.withArgs('key').returns(undefined);
 
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(callback.getCall(2))
                             .to.have.been.calledWith('Error: Item could not be get from cache.');
@@ -334,9 +315,7 @@ describe('Debug plugin', () => {
                 });
 
                 it('should call callback with info that item was retrieved from cache', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value', extra);
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(callback.getCall(2))
                         .to.have.been.calledWith('(3/7) Item got from cache successfully.');
@@ -362,36 +341,28 @@ describe('Debug plugin', () => {
                             'know that there are no hooks that might mutate the data in the process, it means that ' +
                             'something is wrong while retrieving data from storage.';
 
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(callback.getCall(3))
                             .to.have.been.calledWith(message);
                     });
 
                     it('should not perform any other checks', () => {
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
                         expect(dummyCacheInstance.removeItem).to.not.have.been.called;
                     });
 
                     it('should call callback 4 times', () => {
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(callback.callCount).to.eq(4)
                     });
                 });
 
                 it('should call callback with info that items are equal', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value', extra);
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(callback.getCall(3))
                         .to.have.been.calledWith('(4/7) Items are equal.');
@@ -400,9 +371,7 @@ describe('Debug plugin', () => {
 
             describe('getExtra check', () => {
                 it('should get extra for given item identified by a key', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value', extra);
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(dummyCacheInstance.getExtra)
                         .to.have.been.calledWith('key')
@@ -414,9 +383,7 @@ describe('Debug plugin', () => {
                     it('should call callback with error message', () => {
                         dummyCacheInstance.getExtra.withArgs('key').returns(undefined);
 
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(callback.getCall(4))
                             .to.have.been.calledWith('Error: Extra could not be get from cache.');
@@ -424,9 +391,7 @@ describe('Debug plugin', () => {
                 });
 
                 it('should call callback with info that extra was retrieved from cache', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value', extra);
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(callback.getCall(4))
                         .to.have.been.calledWith('(4/7) Extra got from cache successfully.');
@@ -435,9 +400,7 @@ describe('Debug plugin', () => {
 
             describe('removeItem check', () => {
                 it('should remove the item', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value', extra);
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(dummyCacheInstance.removeItem)
                         .to.have.been.calledWith('key')
@@ -451,35 +414,27 @@ describe('Debug plugin', () => {
                     });
 
                     it('should call callback with error message', () => {
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(callback.getCall(5))
                             .to.have.been.calledWith('Error: Item could not be removed.');
                     });
 
                     it('should not perform any other checks', () => {
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
                     });
 
                     it('should call callback 6 times', () => {
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(callback.callCount).to.eq(6)
                     });
                 });
 
                 it('should call callback with info that item was removed', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value', extra);
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(callback.getCall(5))
                         .to.have.been.calledWith('(5/7) Item removed successfully.');
@@ -488,9 +443,7 @@ describe('Debug plugin', () => {
 
             describe('hasItem check after item was removed', () => {
                 it('should check if item exists', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value', extra);
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(dummyCacheInstance.hasItem.getCall(2))
                         .to.have.been.calledWith('key');
@@ -502,27 +455,21 @@ describe('Debug plugin', () => {
                     });
 
                     it('should call callback with error message', () => {
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(callback.getCall(6))
                             .to.have.been.calledWith('Error: Item still exists.');
                     });
 
                     it('should call callback 7 times', () => {
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                        extensions.runDiagnostics('key', 'value', extra);
+                        runDiagnostics(dummyCacheInstance);
 
                         expect(callback.callCount).to.eq(7)
                     });
                 });
 
                 it('should call callback with info that item was successfully removed', () => {
-                    const extensions = plugin.createExtensions(dummyCacheInstance);
-
-                    extensions.runDiagnostics('key', 'value', extra);
+                    runDiagnostics(dummyCacheInstance);
 
                     expect(callback.getCall(6))
                         .to.have.been.calledWith('(6/7) Item is not present in cache.');
