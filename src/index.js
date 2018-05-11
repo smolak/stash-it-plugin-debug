@@ -15,7 +15,7 @@ function runPreliminaryCheck({ cacheInstance, key }) {
 
 function runSetItemCheck({ cacheInstance, callback, key, value, extra }) {
     const setItem = cacheInstance.setItem(key, value, extra);
-    const message = setItem ? '(1/6) Item set successfully.' : 'Error: Could not set item in the cache.';
+    const message = setItem ? '(1/7) Item set successfully.' : 'Error: Could not set item in the cache.';
 
     callback(message);
 
@@ -24,7 +24,7 @@ function runSetItemCheck({ cacheInstance, callback, key, value, extra }) {
 
 function runHasItemCheck({ cacheInstance, callback, key }) {
     const result = cacheInstance.hasItem(key);
-    const message = result ? '(2/6) Item is present in cache.' : 'Error: Could not find the item in cache.';
+    const message = result ? '(2/7) Item is present in cache.' : 'Error: Could not find the item in cache.';
 
     callback(message);
 
@@ -33,7 +33,7 @@ function runHasItemCheck({ cacheInstance, callback, key }) {
 
 function runGetItemCheck({ cacheInstance, callback, key }) {
     const gotItem = cacheInstance.getItem(key);
-    const message = gotItem ? '(3/6) Item got from cache successfully.' : 'Error: Item could not be get from cache.';
+    const message = gotItem ? '(3/7) Item got from cache successfully.' : 'Error: Item could not be get from cache.';
 
     callback(message);
 
@@ -42,21 +42,30 @@ function runGetItemCheck({ cacheInstance, callback, key }) {
 
 function runItemComparisonCheck(callback, setItem, gotItem) {
     const result = equals(setItem, gotItem);
-    const message = result ?
-        '(4/6) Items are equal.' :
-        'Error: Retrieved item is different than one created while setting it. If ' +
-        'there are any hooks added, they can alter any data being set / got from cache. If you ' +
-        'know that there are no hooks that might mutate the data in the process, it means that ' +
-        'something is wrong while retrieving data from storage.';
+    const message = result
+        ? '(4/7) Items are equal.'
+        : 'Error: Retrieved item is different than one created while setting it. If ' +
+          'there are any hooks added, they can alter any data being set / got from cache. If you ' +
+          'know that there are no hooks that might mutate the data in the process, it means that ' +
+          'something is wrong while retrieving data from storage.';
 
     callback(message);
 
     return result;
 }
 
+function runGetExtraCheck({ cacheInstance, callback, key }) {
+    const extra = cacheInstance.getExtra(key);
+    const message = extra ? '(4/7) Extra got from cache successfully.' : 'Error: Extra could not be get from cache.';
+
+    callback(message);
+
+    return extra;
+}
+
 function runRemoveItemCheck({ cacheInstance, callback, key }) {
     const result = cacheInstance.removeItem(key);
-    const message = result ? '(5/6) Item removed successfully.' : 'Error: Item could not be removed.';
+    const message = result ? '(5/7) Item removed successfully.' : 'Error: Item could not be removed.';
 
     callback(message);
 
@@ -65,7 +74,7 @@ function runRemoveItemCheck({ cacheInstance, callback, key }) {
 
 function runHasItemAfterRemoveCheck({ cacheInstance, callback, key }) {
     const result = cacheInstance.hasItem(key);
-    const message = result ? 'Error: Item still exists.' : '(6/6) Item is not present in cache.';
+    const message = result ? 'Error: Item still exists.' : '(6/7) Item is not present in cache.';
 
     callback(message);
 
@@ -106,7 +115,7 @@ export default function debug(callback, withCacheInstance = false) {
     return {
         createExtensions: (cacheInstance) => {
             return {
-                runDiagnostics: (key, value, extra = {}) => {
+                runDiagnostics: (key, value, extra) => {
                     const payload = { cacheInstance, callback, key, value, extra };
 
                     runPreliminaryCheck(payload);
@@ -132,6 +141,12 @@ export default function debug(callback, withCacheInstance = false) {
                     const comparisonResult = runItemComparisonCheck(callback, setItemCheck, getItemCheck);
 
                     if (!comparisonResult) {
+                        return;
+                    }
+
+                    const getExtraCheck = runGetExtraCheck(payload);
+
+                    if (!getExtraCheck) {
                         return;
                     }
 
