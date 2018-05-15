@@ -135,13 +135,13 @@ describe('Debug plugin', () => {
             const extra = {
                 some: 'extraData'
             };
-            const combinedExtra = Object.assign({}, extra, { more: 'extraData' });
+            const additionalExtra = { ___someAdditionalExtra___: '___someAdditionalValue___' };
+            const extendedExtra = Object.assign({}, extra, additionalExtra);
             const item = {
                 key: 'key',
                 value: 'value',
                 extra
             };
-            const itemWithCombinedExtra = Object.assign({}, item, { extra: combinedExtra });
             const dummyCacheInstance = {
                 getItem: sinon.stub(),
                 getExtra: sinon.stub(),
@@ -154,9 +154,9 @@ describe('Debug plugin', () => {
             let plugin;
 
             function runDiagnostics(cacheInstance) {
-                const extensions = plugin.createExtensions(cacheInstance);
-
-                extensions.runDiagnostics('key', 'value', extra);
+                return plugin
+                        .createExtensions(cacheInstance)
+                        .runDiagnostics('key', 'value', extra);
             }
 
             beforeEach(() => {
@@ -178,8 +178,10 @@ describe('Debug plugin', () => {
                 dummyCacheInstance.setItem.withArgs('key', 'value', extra).returns(item);
 
                 dummyCacheInstance.addExtra.reset();
+                dummyCacheInstance.addExtra.withArgs('key', additionalExtra).returns(extendedExtra);
 
                 dummyCacheInstance.setExtra.reset();
+                dummyCacheInstance.setExtra.withArgs('key', extra).returns(extra);
 
                 plugin = createDebugPlugin(callback);
             });
@@ -193,32 +195,43 @@ describe('Debug plugin', () => {
                 });
 
                 context('when item for given key exists', () => {
-                    it('should throw', () => {
+                    it('should call callback with failure message', () => {
                         dummyCacheInstance.hasItem.onCall(0).returns(true);
 
-                        const extensions = plugin.createExtensions(dummyCacheInstance);
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(0))
+                                .to.have.been.calledWith(
+                                    `You can't run diagnostics on existing item. Use different key.`
+                            );
+                        });
+                    });
 
-                        expect(extensions.runDiagnostics.bind(null, 'key'))
-                            .to.throw('You can\'t run diagnostics on existing item. Use different key.');
+                    it('should call callback with failure finished message', () => {
+                        dummyCacheInstance.hasItem.onCall(0).returns(true);
+
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(1))
+                                .to.have.been.calledWith('Finished: FAILURE.');
+                        });
                     });
                 });
             });
 
             describe('setItem check', () => {
                 it('should set an item', () => {
-                    runDiagnostics(dummyCacheInstance);
-
-                    expect(dummyCacheInstance.setItem)
-                        .to.have.been.calledWith('key', 'value', extra)
-                        .to.have.been.calledAfter(dummyCacheInstance.hasItem);
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(dummyCacheInstance.setItem)
+                            .to.have.been.calledWith('key', 'value', extra)
+                            .to.have.been.calledAfter(dummyCacheInstance.hasItem);
+                    });
                 });
 
                 it('should call callback with set item successful message', () => {
-                    runDiagnostics(dummyCacheInstance);
-
-                    expect(callback)
-                        .to.have.been.calledWith('(1/7) Item set successfully.')
-                        .to.have.been.calledAfter(dummyCacheInstance.setItem);
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(callback)
+                            .to.have.been.calledWith('(1/9) Item set successfully.')
+                            .to.have.been.calledAfter(dummyCacheInstance.setItem);
+                    });
                 });
 
                 context(`when item was not set`, () => {
@@ -227,42 +240,42 @@ describe('Debug plugin', () => {
                     });
 
                     it('should call callback with error message', () => {
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(callback.getCall(0))
-                            .to.have.been.calledWith('Error: Could not set item in the cache.');
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(0))
+                                .to.have.been.calledWith('Error: Could not set item in the cache.');
+                        });
                     });
 
-                    it('should not perform any other checks', () => {
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(dummyCacheInstance.hasItem).to.have.been.calledOnce;
-                        expect(dummyCacheInstance.getItem).to.not.have.been.called;
-                        expect(dummyCacheInstance.removeItem).to.not.have.been.called;
-                        expect(dummyCacheInstance.getExtra).to.not.have.been.called;
+                    it('should call callback with failure finished message', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(1))
+                                .to.have.been.calledWith('Finished: FAILURE.');
+                        });
                     });
 
-                    it('should call callback once', () => {
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(callback).to.have.been.calledOnce;
+                    it('should not perform any further checks', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(dummyCacheInstance.getItem).to.not.have.been.called;
+                            expect(dummyCacheInstance.removeItem).to.not.have.been.called;
+                            expect(dummyCacheInstance.getExtra).to.not.have.been.called;
+                        });
                     });
                 });
             });
 
             describe('hasItem check', () => {
                 it('should check if item exists', () => {
-                    runDiagnostics(dummyCacheInstance);
-
-                    expect(dummyCacheInstance.hasItem.getCall(1))
-                        .to.have.been.calledWith('key');
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(dummyCacheInstance.hasItem.getCall(1))
+                            .to.have.been.calledWith('key');
+                    });
                 });
 
                 it('should call callback with info that item is present in cache', () => {
-                    runDiagnostics(dummyCacheInstance);
-
-                    expect(callback.getCall(1))
-                        .to.have.been.calledWith('(2/7) Item is present in cache.');
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(callback.getCall(1))
+                            .to.have.been.calledWith('(2/9) Item is present in cache.');
+                    });
                 });
 
                 context(`when item, after being set, can't be found`, () => {
@@ -271,59 +284,81 @@ describe('Debug plugin', () => {
                     });
 
                     it('should call callback with error message', () => {
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(callback.getCall(1))
-                            .to.have.been.calledWith('Error: Could not find the item in cache.');
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(1))
+                                .to.have.been.calledWith('Error: Could not find the item in cache.');
+                        });
                     });
 
-                    it('should not perform any other checks', () => {
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
-                        expect(dummyCacheInstance.getItem).to.not.have.been.called;
-                        expect(dummyCacheInstance.removeItem).to.not.have.been.called;
+                    it('should call callback with failure finished message', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(2))
+                                .to.have.been.calledWith('Finished: FAILURE.');
+                        });
                     });
 
-                    it('should call callback twice', () => {
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(callback).to.have.been.calledTwice;
+                    it('should not perform any further checks', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(dummyCacheInstance.getItem).to.not.have.been.called;
+                            expect(dummyCacheInstance.removeItem).to.not.have.been.called;
+                        });
                     });
                 });
             });
 
             describe('getItem check', () => {
                 it('should get the item', () => {
-                    runDiagnostics(dummyCacheInstance);
-
-                    expect(dummyCacheInstance.getItem)
-                        .to.have.been.calledWith('key')
-                        .to.have.been.calledAfter(dummyCacheInstance.setItem)
-                        .to.have.been.calledOnce;
-                });
-
-                context(`when item can't be retrieved from cache`, () => {
-                    it('should call callback with error message', () => {
-                        dummyCacheInstance.getItem.withArgs('key').returns(undefined);
-
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(callback.getCall(2))
-                            .to.have.been.calledWith('Error: Item could not be get from cache.');
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(dummyCacheInstance.getItem)
+                            .to.have.been.calledWith('key')
+                            .to.have.been.calledAfter(dummyCacheInstance.setItem)
+                            .to.have.been.calledOnce;
                     });
                 });
 
                 it('should call callback with info that item was retrieved from cache', () => {
-                    runDiagnostics(dummyCacheInstance);
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(callback.getCall(2))
+                            .to.have.been.calledWith('(3/9) Item got from cache successfully.');
+                    });
+                });
 
-                    expect(callback.getCall(2))
-                        .to.have.been.calledWith('(3/7) Item got from cache successfully.');
+                context(`when item can't be retrieved from cache`, () => {
+                    beforeEach(() => {
+                        dummyCacheInstance.getItem.withArgs('key').returns(undefined);
+                    });
+
+                    it('should call callback with error message', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(2))
+                                .to.have.been.calledWith('Error: Item could not be get from cache.');
+                        });
+                    });
+
+                    it('should call callback with failure finished message', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(3))
+                                .to.have.been.calledWith('Finished: FAILURE.');
+                        });
+                    });
+
+                    it('should not perform any further checks', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(dummyCacheInstance.removeItem).to.not.have.been.called;
+                        });
+                    });
                 });
             });
 
-            describe('item comparison check', () => {
-                context('when item returned by setItem does not equal one returned by getItem', () => {
+            describe('items comparison check', () => {
+                it('should call callback with info that items are equal', () => {
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(callback.getCall(3))
+                            .to.have.been.calledWith('(4/9) Items are equal.');
+                    });
+                });
+
+                context('when item returned by setItem does not equal the one returned by getItem', () => {
                     const setItem = { key: 'key', value: 'value', extra: 'extra' };
                     const gotItem = {
                         ...setItem,
@@ -341,71 +376,177 @@ describe('Debug plugin', () => {
                             'know that there are no hooks that might mutate the data in the process, it means that ' +
                             'something is wrong while retrieving data from storage.';
 
-                        runDiagnostics(dummyCacheInstance);
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(3))
+                                .to.have.been.calledWith(message);
+                        });
+                    });
 
-                        expect(callback.getCall(3))
-                            .to.have.been.calledWith(message);
+                    it('should call callback with failure finished message', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(4))
+                                .to.have.been.calledWith('Finished: FAILURE.');
+                        });
                     });
 
                     it('should not perform any other checks', () => {
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
-                        expect(dummyCacheInstance.removeItem).to.not.have.been.called;
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(dummyCacheInstance.removeItem).to.not.have.been.called;
+                        });
                     });
-
-                    it('should call callback 4 times', () => {
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(callback.callCount).to.eq(4)
-                    });
-                });
-
-                it('should call callback with info that items are equal', () => {
-                    runDiagnostics(dummyCacheInstance);
-
-                    expect(callback.getCall(3))
-                        .to.have.been.calledWith('(4/7) Items are equal.');
                 });
             });
 
             describe('getExtra check', () => {
                 it('should get extra for given item identified by a key', () => {
-                    runDiagnostics(dummyCacheInstance);
-
-                    expect(dummyCacheInstance.getExtra)
-                        .to.have.been.calledWith('key')
-                        .to.have.been.calledAfter(dummyCacheInstance.getItem)
-                        .to.have.been.calledOnce;
-                });
-
-                context(`when extra can't be retrieved from cache`, () => {
-                    it('should call callback with error message', () => {
-                        dummyCacheInstance.getExtra.withArgs('key').returns(undefined);
-
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(callback.getCall(4))
-                            .to.have.been.calledWith('Error: Extra could not be get from cache.');
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(dummyCacheInstance.getExtra)
+                            .to.have.been.calledWith('key')
+                            .to.have.been.calledAfter(dummyCacheInstance.getItem)
+                            .to.have.been.calledOnce;
                     });
                 });
 
                 it('should call callback with info that extra was retrieved from cache', () => {
-                    runDiagnostics(dummyCacheInstance);
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(callback.getCall(4))
+                            .to.have.been.calledWith('(5/9) Extra got from cache successfully.');
+                    });
+                });
 
-                    expect(callback.getCall(4))
-                        .to.have.been.calledWith('(4/7) Extra got from cache successfully.');
+                context(`when extra can't be retrieved from cache`, () => {
+                    beforeEach(() => {
+                        dummyCacheInstance.getExtra.withArgs('key').returns(undefined);
+                    });
+
+                    it('should call callback with error message', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(4))
+                                .to.have.been.calledWith('Error: Extra could not be get from cache.');
+                        });
+                    });
+
+                    it('should call callback with failure finished message', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(5))
+                                .to.have.been.calledWith('Finished: FAILURE.');
+                        });
+                    });
+
+                    it('should not perform any other checks', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(dummyCacheInstance.removeItem).to.not.have.been.called;
+                        });
+                    });
+                });
+            });
+
+            describe('addExtra check', () => {
+                it('should add extra for given item identified by a key', () => {
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(dummyCacheInstance.addExtra)
+                            .to.have.been.calledWith('key', additionalExtra)
+                            .to.have.been.calledAfter(dummyCacheInstance.getExtra)
+                            .to.have.been.calledOnce;
+                    });
+                });
+
+                it('should call callback with info that extra was added to cache', () => {
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(callback.getCall(5))
+                            .to.have.been.calledWith('(6/9) Extra added to cache successfully.');
+                    });
+                });
+
+                context(`when extra can't be added to cache`, () => {
+                    beforeEach(() => {
+                        dummyCacheInstance.addExtra.withArgs('key', additionalExtra).returns(undefined);
+                    });
+
+                    it('should call callback with error message', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(5))
+                                .to.have.been.calledWith('Error: Extra could not be added to cache.');
+                        });
+                    });
+
+                    it('should call callback with failure finished message', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(6))
+                                .to.have.been.calledWith('Finished: FAILURE.');
+                        });
+                    });
+
+                    it('should not perform any other checks', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(dummyCacheInstance.setExtra).to.not.have.been.called;
+                            expect(dummyCacheInstance.removeItem).to.not.have.been.called;
+                            expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
+                        });
+                    });
+                });
+            });
+
+            describe('setExtra check', () => {
+                it('should add extra for given item identified by a key', () => {
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(dummyCacheInstance.setExtra)
+                            .to.have.been.calledWith('key', extra)
+                            .to.have.been.calledAfter(dummyCacheInstance.addExtra)
+                            .to.have.been.calledOnce;
+                    });
+                });
+
+                it('should call callback with info that extra was set in cache', () => {
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(callback.getCall(6))
+                            .to.have.been.calledWith('(7/9) Extra set in cache successfully.');
+                    });
+                });
+
+                context(`when extra can't be set in cache`, () => {
+                    beforeEach(() => {
+                        dummyCacheInstance.setExtra.withArgs('key', extra).returns(undefined);
+                    });
+
+                    it('should call callback with error message', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(6))
+                                .to.have.been.calledWith('Error: Extra could not be set in cache.');
+                        });
+                    });
+
+                    it('should call callback with failure finished message', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(7))
+                                .to.have.been.calledWith('Finished: FAILURE.');
+                        });
+                    });
+
+                    it('should not perform any other checks', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(dummyCacheInstance.removeItem).to.not.have.been.called;
+                            expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
+                        });
+                    });
                 });
             });
 
             describe('removeItem check', () => {
                 it('should remove the item', () => {
-                    runDiagnostics(dummyCacheInstance);
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(dummyCacheInstance.removeItem)
+                            .to.have.been.calledWith('key')
+                            .to.have.been.calledAfter(dummyCacheInstance.setExtra)
+                            .to.have.been.calledOnce;
+                    });
+                });
 
-                    expect(dummyCacheInstance.removeItem)
-                        .to.have.been.calledWith('key')
-                        .to.have.been.calledAfter(dummyCacheInstance.getItem)
-                        .to.have.been.calledOnce;
+                it('should call callback with info that item was removed', () => {
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(callback.getCall(7))
+                            .to.have.been.calledWith('(8/9) Item removed successfully.');
+                    });
                 });
 
                 context('when item could not be removed', () => {
@@ -414,39 +555,40 @@ describe('Debug plugin', () => {
                     });
 
                     it('should call callback with error message', () => {
-                        runDiagnostics(dummyCacheInstance);
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(7))
+                                .to.have.been.calledWith('Error: Item could not be removed.');
+                        });
+                    });
 
-                        expect(callback.getCall(5))
-                            .to.have.been.calledWith('Error: Item could not be removed.');
+                    it('should call callback with failure finished message', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(8))
+                                .to.have.been.calledWith('Finished: FAILURE.');
+                        });
                     });
 
                     it('should not perform any other checks', () => {
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(dummyCacheInstance.hasItem).to.have.been.calledTwice;
+                        });
                     });
-
-                    it('should call callback 6 times', () => {
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(callback.callCount).to.eq(6)
-                    });
-                });
-
-                it('should call callback with info that item was removed', () => {
-                    runDiagnostics(dummyCacheInstance);
-
-                    expect(callback.getCall(5))
-                        .to.have.been.calledWith('(5/7) Item removed successfully.');
                 });
             });
 
             describe('hasItem check after item was removed', () => {
                 it('should check if item exists', () => {
-                    runDiagnostics(dummyCacheInstance);
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(dummyCacheInstance.hasItem.getCall(2))
+                            .to.have.been.calledWith('key');
+                    });
+                });
 
-                    expect(dummyCacheInstance.hasItem.getCall(2))
-                        .to.have.been.calledWith('key');
+                it('should call callback with info that item was successfully removed', () => {
+                    runDiagnostics(dummyCacheInstance).then(() => {
+                        expect(callback.getCall(8))
+                            .to.have.been.calledWith('(9/9) Item is not present in cache.');
+                    });
                 });
 
                 context('when item was found', () => {
@@ -455,24 +597,18 @@ describe('Debug plugin', () => {
                     });
 
                     it('should call callback with error message', () => {
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(callback.getCall(6))
-                            .to.have.been.calledWith('Error: Item still exists.');
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(8))
+                                .to.have.been.calledWith('Error: Item still exists.');
+                        });
                     });
 
-                    it('should call callback 7 times', () => {
-                        runDiagnostics(dummyCacheInstance);
-
-                        expect(callback.callCount).to.eq(7)
+                    it('should call callback with failure finished message', () => {
+                        runDiagnostics(dummyCacheInstance).then(() => {
+                            expect(callback.getCall(9))
+                                .to.have.been.calledWith('Finished: FAILURE.');
+                        });
                     });
-                });
-
-                it('should call callback with info that item was successfully removed', () => {
-                    runDiagnostics(dummyCacheInstance);
-
-                    expect(callback.getCall(6))
-                        .to.have.been.calledWith('(6/7) Item is not present in cache.');
                 });
             });
         });

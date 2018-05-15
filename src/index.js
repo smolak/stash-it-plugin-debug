@@ -9,76 +9,127 @@ function upperFirst(string) {
 
 function runPreliminaryCheck({ cacheInstance, key }) {
     if (cacheInstance.hasItem(key)) {
-        throw new Error('You can\'t run diagnostics on existing item. Use different key.');
+        return Promise.reject(new Error('You can\'t run diagnostics on existing item. Use different key.'));
     }
+
+    return Promise.resolve();
 }
 
 function runSetItemCheck({ cacheInstance, callback, key, value, extra }) {
     const setItem = cacheInstance.setItem(key, value, extra);
-    const message = setItem ? '(1/7) Item set successfully.' : 'Error: Could not set item in the cache.';
 
-    callback(message);
+    if (!setItem) {
+        return Promise.reject(new Error('Error: Could not set item in the cache.'));
+    }
 
-    return setItem;
+    callback('(1/9) Item set successfully.');
+
+    return Promise.resolve(setItem);
 }
 
-function runHasItemCheck({ cacheInstance, callback, key }) {
+function runHasItemCheck({ cacheInstance, callback, key }, setItem) {
     const result = cacheInstance.hasItem(key);
-    const message = result ? '(2/7) Item is present in cache.' : 'Error: Could not find the item in cache.';
 
-    callback(message);
+    if (!result) {
+        return Promise.reject(new Error('Error: Could not find the item in cache.'));
+    }
 
-    return result;
+    callback('(2/9) Item is present in cache.');
+
+    return Promise.resolve(setItem);
 }
 
-function runGetItemCheck({ cacheInstance, callback, key }) {
+function runGetItemCheck({ cacheInstance, callback, key }, setItem) {
     const gotItem = cacheInstance.getItem(key);
-    const message = gotItem ? '(3/7) Item got from cache successfully.' : 'Error: Item could not be get from cache.';
 
-    callback(message);
+    if (!gotItem) {
+        return Promise.reject(new Error('Error: Item could not be get from cache.'));
+    }
 
-    return gotItem;
+    callback('(3/9) Item got from cache successfully.');
+
+    return Promise.resolve({ setItem, gotItem });
 }
 
 function runItemComparisonCheck(callback, setItem, gotItem) {
     const result = equals(setItem, gotItem);
-    const message = result
-        ? '(4/7) Items are equal.'
-        : 'Error: Retrieved item is different than one created while setting it. If ' +
-          'there are any hooks added, they can alter any data being set / got from cache. If you ' +
-          'know that there are no hooks that might mutate the data in the process, it means that ' +
-          'something is wrong while retrieving data from storage.';
 
-    callback(message);
+    if (!result) {
+        const message = 'Error: Retrieved item is different than one created while setting it. If ' +
+            'there are any hooks added, they can alter any data being set / got from cache. If you ' +
+            'know that there are no hooks that might mutate the data in the process, it means that ' +
+            'something is wrong while retrieving data from storage.';
 
-    return result;
+        return Promise.reject(new Error(message));
+    }
+
+    callback('(4/9) Items are equal.');
+
+    return Promise.resolve();
 }
 
 function runGetExtraCheck({ cacheInstance, callback, key }) {
     const extra = cacheInstance.getExtra(key);
-    const message = extra ? '(4/7) Extra got from cache successfully.' : 'Error: Extra could not be get from cache.';
 
-    callback(message);
+    if (!extra) {
+        return Promise.reject(new Error('Error: Extra could not be get from cache.'));
+    }
 
-    return extra;
+    callback('(5/9) Extra got from cache successfully.');
+
+    return Promise.resolve();
+}
+
+function runAddExtraCheck({ cacheInstance, callback, key, extra }) {
+    const additionalExtra = { ___someAdditionalExtra___: '___someAdditionalValue___' };
+    const customExtra = Object.assign({}, extra, additionalExtra);
+    const addedExtra = cacheInstance.addExtra(key, additionalExtra);
+    const result = equals(customExtra, addedExtra);
+
+    if (!result) {
+        return Promise.reject(new Error('Error: Extra could not be added to cache.'));
+    }
+
+    callback('(6/9) Extra added to cache successfully.');
+
+    return Promise.resolve();
+}
+
+function runSetExtraCheck({ cacheInstance, callback, key, extra }) {
+    const setExtra = cacheInstance.setExtra(key, extra);
+    const result = equals(extra, setExtra);
+
+    if (!result) {
+        return Promise.reject(new Error('Error: Extra could not be set in cache.'));
+    }
+
+    callback('(7/9) Extra set in cache successfully.');
+
+    return Promise.resolve();
 }
 
 function runRemoveItemCheck({ cacheInstance, callback, key }) {
     const result = cacheInstance.removeItem(key);
-    const message = result ? '(5/7) Item removed successfully.' : 'Error: Item could not be removed.';
 
-    callback(message);
+    if (!result) {
+        return Promise.reject(new Error('Error: Item could not be removed.'));
+    }
 
-    return result;
+    callback('(8/9) Item removed successfully.');
+
+    return Promise.resolve();
 }
 
 function runHasItemAfterRemoveCheck({ cacheInstance, callback, key }) {
     const result = cacheInstance.hasItem(key);
-    const message = result ? 'Error: Item still exists.' : '(6/7) Item is not present in cache.';
 
-    callback(message);
+    if (result) {
+        return Promise.reject(new Error('Error: Item still exists.'));
+    }
 
-    return result;
+    callback('(9/9) Item is not present in cache.');
+
+    return Promise.resolve();
 }
 
 export default function debug(callback, withCacheInstance = false) {
@@ -118,45 +169,25 @@ export default function debug(callback, withCacheInstance = false) {
                 runDiagnostics: (key, value, extra) => {
                     const payload = { cacheInstance, callback, key, value, extra };
 
-                    runPreliminaryCheck(payload);
-
-                    const setItemCheck = runSetItemCheck(payload);
-
-                    if (!setItemCheck) {
-                        return;
-                    }
-
-                    const hasItemCheck = runHasItemCheck(payload);
-
-                    if (!hasItemCheck) {
-                        return;
-                    }
-
-                    const getItemCheck = runGetItemCheck(payload);
-
-                    if (!getItemCheck) {
-                        return;
-                    }
-
-                    const comparisonResult = runItemComparisonCheck(callback, setItemCheck, getItemCheck);
-
-                    if (!comparisonResult) {
-                        return;
-                    }
-
-                    const getExtraCheck = runGetExtraCheck(payload);
-
-                    if (!getExtraCheck) {
-                        return;
-                    }
-
-                    const removeItemCheck = runRemoveItemCheck(payload);
-
-                    if (!removeItemCheck) {
-                        return;
-                    }
-
-                    runHasItemAfterRemoveCheck(payload);
+                    return Promise
+                        .resolve(runPreliminaryCheck(payload))
+                        .then(() => runSetItemCheck(payload))
+                        .then((setItem) => runHasItemCheck(payload, setItem))
+                        .then((setItem) => runGetItemCheck(payload, setItem))
+                        .then(({ setItem, gotItem }) => runItemComparisonCheck(callback, setItem, gotItem))
+                        .then(() => runGetExtraCheck(payload))
+                        .then(() => runAddExtraCheck(payload))
+                        .then(() => runSetExtraCheck(payload))
+                        .then(() => runRemoveItemCheck(payload))
+                        .then(() => runHasItemAfterRemoveCheck(payload))
+                        .then(() => {
+                            callback('Finished: SUCCESS.');
+                        })
+                        .catch((error) => {
+                            // eslint-disable-next-line callback-return
+                            callback(error.message);
+                            callback('Finished: FAILURE.');
+                        });
                 }
             };
         },
