@@ -9,7 +9,7 @@ function upperFirst(string) {
 
 function runPreliminaryCheck({ cacheInstance, key }) {
     if (cacheInstance.hasItem(key)) {
-        return Promise.reject(new Error('You can\'t run diagnostics on existing item. Use different key.'));
+        return Promise.reject(new Error(`You can't run diagnostics on existing item. Use different key.`));
     }
 
     return Promise.resolve();
