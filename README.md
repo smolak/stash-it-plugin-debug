@@ -95,7 +95,7 @@ Whole object will look like this:
 
 
 For instance. If you use `console.log` as a callback,
-for hooks for `setItem` method, you should see something like:
+for hooks, for `setItem` method, you should see something like:
 
 ```sh
 { event: 'preSetItem',
