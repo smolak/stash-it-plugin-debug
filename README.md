@@ -22,6 +22,8 @@ npm install stash-it-plugin-debug --save-dev
 
 ## Usage
 
+##### Installation
+
 ```javascript
 import { createCache } from 'stash-it';
 import createMemoryAdapter from 'stash-it-adapter-memory'; // you can use any adapter you like
@@ -35,26 +37,29 @@ const cache = createCache(adapter);
 const logger = console.log;
 const debugPlugin = createDebugPlugin(logger);
 const cacheWithPlugins = cache.registerPlugins([ debugPlugin ]);
-
-// Usage example 1:
-cacheWithPlugins.setItem('key', 'value');
-
-// This will log few times informations about cache instance and data flow
-// throughout setItem lifecycle, those will be:
-// preSetItem, preBuildKey, postBuildKey, postSetItem
-
-// Any other method (getItem, hasItem, removeItem, ...) will produce
-// similar logs.
-
-// Usage example 2:
-cacheWithPlugins.runDiagnostics('key', 'value', { some: 'extraData' });
-
-// This will log many times as well checking if, for used adapter, all
-// base actions work and cache is capable of setting, getting, checking
-// for existence and removing things from storage used by adapter.
-//
-// It's recommended to run this before given storage will be used.
 ```
+
+##### Usage example 1:
+
+```javascript
+cacheWithPlugins.setItem('key', 'value');
+```
+
+This will log few informations about cache instance and data flow throughout `setItem`'s lifecycle, those will be: preSetItem, preBuildKey, postBuildKey, postSetItem.
+
+Any other method used (getItem, hasItem, removeItem, ...) will produce similar logs with data flow for their lifecycle.
+
+What are lifecycles? See the [lifecycle of methods docs](https://jaceks.gitbooks.io/stash-it/content/advanced-usage/lifecycle-of-methods.html).
+
+##### Usage example 2:
+
+```javascript
+cacheWithPlugins.runDiagnostics('key', 'value', { some: 'extraData' });
+```
+
+This will log many times as well checking if, for used adapter, all base actions work and cache is capable of setting, getting, checking for existence and removing things from storage used by adapter.
+
+It's recommended to run this before given storage will be used.
 
 ## API
 
