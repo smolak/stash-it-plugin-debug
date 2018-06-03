@@ -121,7 +121,7 @@ For `runDiagnostics` it will be passed a string with information about
 given step runDiagnostics performs. For example, this is how the whole
 diagnostics report might look like:
 
-```sh
+```
 (1/9) Item set successfully.
 (2/9) Item is present in cache.
 (3/9) Item got from cache successfully.
