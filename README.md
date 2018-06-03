@@ -149,7 +149,7 @@ If you need to log the `cacheInstance` object simply pass this argument as `true
 
 As the very same callback is used for both `hooks` and `runDiagnostics`,
 and as runDiagnostics runs all of the methods, then each method will
-produce logging of `{ event, args }` data as well. That could result in a very long data log.
+produce logging of `{ event, args }` data as well - that could result in a very, very long data log.
 
 Let's say that you only need to check if storage works, but you don't want to see logs for events and their handlers.
 
