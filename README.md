@@ -2,8 +2,8 @@
 
 # stash-it-plugin-debug
 
-[![build status](https://img.shields.io/travis/smolak/stash-it-adapter-memory/master.svg?style=flat-square)](https://travis-ci.org/smolak/stash-it-adapter-memory)
-[![Coverage Status](https://coveralls.io/repos/github/smolak/stash-it-adapter-memory/badge.svg?branch=master)](https://coveralls.io/github/smolak/stash-it-adapter-memory)
+[![build status](https://img.shields.io/travis/smolak/stash-it-plugin-debug/master.svg?style=flat-square)](https://travis-ci.org/smolak/stash-it-plugin-debug)
+[![Coverage Status](https://coveralls.io/repos/github/smolak/stash-it-plugin-debug/badge.svg?branch=master)](https://coveralls.io/github/smolak/stash-it-plugin-debug?branch=master)
 
 Debug plugin for [stash-it](https://www.npmjs.com/package/stash-it).
 
