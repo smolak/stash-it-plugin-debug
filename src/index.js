@@ -164,7 +164,7 @@ export default function debug(callback, withCacheInstance = false) {
     });
 
     return {
-        createExtensions: (cacheInstance) => {
+        createExtensions: ({ cacheInstance }) => {
             return {
                 runDiagnostics: (key, value, extra) => {
                     const payload = { cacheInstance, callback, key, value, extra };

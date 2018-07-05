@@ -114,7 +114,7 @@ describe('Debug plugin', () => {
 
         it('should return an object with runDiagnostics function', () => {
             const plugin = createDebugPlugin(callback);
-            const extensions = plugin.createExtensions();
+            const extensions = plugin.createExtensions({ cacheInstance: {} });
 
             expect(extensions).to.have.property('runDiagnostics')
                 .that.is.a('function');
@@ -155,7 +155,7 @@ describe('Debug plugin', () => {
 
             function runDiagnostics(cacheInstance) {
                 return plugin
-                        .createExtensions(cacheInstance)
+                        .createExtensions({ cacheInstance })
                         .runDiagnostics('key', 'value', extra);
             }
 
